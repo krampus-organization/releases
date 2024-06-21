@@ -1,2 +1,2 @@
 # releases
-Releases of UI's, ESP's, and similar things.
+Releases of UI's, ESP's, and similar stuff.
