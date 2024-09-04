@@ -1,0 +1,138 @@
+--// Variables
+local player = game:GetService("Players").LocalPlayer
+local char = player.Character
+local root = char.HumanoidRootPart
+local UIS = game:GetService("UserInputService")
+local RS = game:GetService("RunService")
+local camera = workspace.CurrentCamera
+
+--// Functions
+local function RandomString()
+    local upperCase = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+    local lowerCase = "abcdefghijklmnopqrstuvwxyz"
+    local numbers = "0123456789"
+    local symbols = "!@#$%&()*+-,./:;<=>?^[]{}"
+    
+    local characters = upperCase .. lowerCase .. numbers .. symbols
+    
+    local keyLength = 32
+    local output = ""
+    
+    for	i = 1, keyLength do
+        local randchar = math.random(#characters)
+        output = output .. string.sub(characters, randchar, randchar)
+    end
+
+    return output
+end
+
+--// Adding Velocity
+if player.Character.HumanoidRootPart:FindFirstChildWhichIsA("BodyVelocity") then player.Character.HumanoidRootPart:FindFirstChildWhichIsA("BodyVelocity"):Destroy() end
+
+local Velocity = Instance.new("BodyVelocity")
+Velocity.Parent = nil
+Velocity.P = 999
+Velocity.MaxForce = Vector3.new(9e9, 9e9, 9e9)
+Velocity.Velocity = Vector3.zero
+Velocity.Name = RandomString()
+
+--// Main
+local config = {
+    speed = 1.6,
+    q_and_e = true,
+    root = player.Character.HumanoidRootPart,
+    enabled = false
+}
+local keys_pressed = {
+    W = false,
+    A = false,
+    S = false,
+    D = false,
+
+    E = false,
+    Q = false
+}
+
+--// Expensive Loop
+task.spawn(function()
+    while task.wait() do
+        config.root = player.Character and player.Character.HumanoidRootPart or (player.CharacterAdded:Wait() and player.Character.HumanoidRootPart) or player.Character.HumanoidRootPart
+        root = config.root
+        Velocity.Parent = root
+    end
+end)
+
+local NoCollision = RS.Stepped:Connect(function()
+    if config.enabled then
+        local char = player.Character or player.CharacterAdded:Wait()
+        for i, v in pairs(char:GetDescendants()) do
+            if v:IsA("BasePart") and v.CanCollide then
+                v.CanCollide = false
+            end
+        end
+    else
+        local char = player.Character or player.CharacterAdded:Wait()
+        for i, v in pairs(char:GetDescendants()) do
+            if v:IsA("BasePart") and v.CanCollide then
+                v.CanCollide = true
+            end
+        end
+    end
+end)
+
+UIS.InputBegan:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.Keyboard then
+        local key_pressed = input.KeyCode.Name
+
+        if keys_pressed[key_pressed] ~= nil then
+            keys_pressed[key_pressed] = true
+        end
+    end
+end)
+UIS.InputEnded:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.Keyboard then
+        local key_pressed = input.KeyCode.Name
+
+        if keys_pressed[key_pressed] ~= nil then
+            keys_pressed[key_pressed] = false
+        end
+        Velocity.Velocity = Vector3.new(0, 0, 0)
+    end
+end)
+
+task.spawn(function()
+    while task.wait() do
+        if config.enabled then
+            if keys_pressed["W"] then
+                Velocity.Velocity = camera.CFrame.lookVector * Vector3.new(config.speed * 10, config.speed * 10, config.speed * 10)
+            end
+            if keys_pressed["A"] then
+                Velocity.Velocity = ((CFrame.new(camera.CFrame.lookVector) * CFrame.Angles(0, 90, 0)) * CFrame.new(0, 0, 10)).Position
+            end
+            if keys_pressed["S"] then
+                Velocity.Velocity = camera.CFrame.lookVector * Vector3.new(-config.speed * 10, -config.speed * 10, -config.speed * 10)
+            end
+            if keys_pressed["D"] then
+                Velocity.Velocity = root.CFrame.lookVector * Vector3.new(config.speed * 10, config.speed * 10, config.speed * 10)
+            end
+
+            if keys_pressed["E"] then
+                Velocity.Velocity = Velocity.Velocity + Vector3.new(0, config.speed / 10, 0)
+            end
+            if keys_pressed["Q"] then
+                Velocity.Velocity = Velocity.Velocity - Vector3.new(0, config.speed / 10, 0)
+            end
+        end
+    end
+end)
+task.spawn(function()
+    while task.wait() do
+        if config.enabled then
+            Velocity.MaxForce = Vector3.new(9e9, 9e9, 9e9)
+        else
+            Velocity.MaxForce = Vector3.zero
+        end
+    end
+end)
+
+return config

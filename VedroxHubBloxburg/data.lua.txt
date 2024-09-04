@@ -1,0 +1,6 @@
+return {
+    discord_username = "hold_cb4564",
+    helper = "dave10.10",
+    tester = "goodyes1",
+    server_url = "https://discord.gg/dw6CsQHcr7"
+}
